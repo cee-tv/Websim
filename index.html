@@ -1,0 +1,172 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Türk TV</title>
+    <style>
+        body {
+            background: #1a1a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+
+        .login-container {
+            background: linear-gradient(45deg, #2a2a2a, #3a3a3a);
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .logo {
+            margin-bottom: 30px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .code-input {
+            width: 200px;
+            padding: 12px;
+            border: 2px solid #444;
+            background: #222;
+            color: white;
+            border-radius: 5px;
+            font-size: 16px;
+            text-align: center;
+            letter-spacing: 3px;
+            transition: all 0.3s ease;
+        }
+
+        .code-input:focus {
+            outline: none;
+            border-color: #666;
+            box-shadow: 0 0 10px rgba(255,255,255,0.1);
+        }
+
+        .login-btn {
+            background: linear-gradient(45deg, #3a3a3a, #444);
+            border: none;
+            padding: 12px 30px;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .login-btn:hover {
+            background: linear-gradient(45deg, #444, #555);
+            transform: translateY(-2px);
+        }
+
+        .login-btn:active {
+            transform: translateY(1px);
+        }
+
+        .error-message {
+            color: #ff6b6b;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .loading {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #ffffff33;
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">Türk TV</div>
+        <div class="input-group">
+            <input type="password" class="code-input" placeholder="Enter Code" maxlength="6">
+        </div>
+        <button class="login-btn">Login</button>
+        <div class="error-message">Invalid code. Please try again.</div>
+        <div class="loading"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if already logged in
+            if (localStorage.getItem('isLoggedIn')) {
+                window.location.href = 'stream.html';
+                return;
+            }
+
+            const loginBtn = document.querySelector('.login-btn');
+            const codeInput = document.querySelector('.code-input');
+            const errorMsg = document.querySelector('.error-message');
+            const loading = document.querySelector('.loading');
+
+            // Add enter key support
+            codeInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    loginBtn.click();
+                }
+            });
+
+            loginBtn.addEventListener('click', async () => {
+                const code = codeInput.value;
+                
+                if (!code) {
+                    errorMsg.textContent = 'Please enter a code';
+                    errorMsg.style.display = 'block';
+                    return;
+                }
+
+                // Hide error and show loading
+                errorMsg.style.display = 'none';
+                loading.style.display = 'block';
+                loginBtn.disabled = true;
+
+                // Simulate API call delay
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                // Simple validation (in real app, this would be server-side)
+                if (code === '123456') {
+                    localStorage.setItem('isLoggedIn', 'true');
+                    window.location.href = 'stream.html';
+                } else {
+                    errorMsg.textContent = 'Invalid code. Please try again.';
+                    errorMsg.style.display = 'block';
+                    loading.style.display = 'none';
+                    loginBtn.disabled = false;
+                    codeInput.value = '';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
