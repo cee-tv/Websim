@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <style>
+        body {
+            background: #1a1a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+
+        .login-container {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .login-title {
+            font-size: 24px;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border-radius: 5px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            background: rgba(255,255,255,0.2);
+        }
+
+        button {
+            background: #cc0000;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        button:hover {
+            background: #ff0000;
+            transform: translateY(-2px);
+        }
+
+        .error-message {
+            color: #ff4444;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .access-info {
+            color: #888;
+            font-size: 0.9em;
+            margin-top: 20px;
+            line-height: 1.5;
+        }
+
+        .telegram-link {
+            color: #0088cc;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .telegram-link:hover {
+            color: #00aaff;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h1 class="login-title">Login</h1>
+        <div class="input-group">
+            <input type="password" id="access-code" placeholder="Enter Access Code" autocomplete="off">
+        </div>
+        <button onclick="login()">Login</button>
+        <div class="error-message" id="error-msg">Invalid access code. Please try again.</div>
+        <div class="access-info">
+            To get access code, contact <a href="https://t.me/kulogoph" target="_blank" class="telegram-link">Ning Yizhou</a> on telegram!
+        </div>
+    </div>
+
+    <script>
+        // Array of valid access codes
+        const VALID_ACCESS_CODES = [
+            '123456',  // Default code
+            '654321',  // Alternate code
+            'TV2023',  // Year-based code
+            'TURK789', // Alphanumeric code
+            'ACCESS55', // Mixed code
+            '112233',  // Sequential code
+            'WATCH24',  // Feature-based code
+            'STREAM1',  // Service-based code
+            'TV4ALL',   // Generic code
+            'CHANNEL1'  // Channel-based code
+        ];
+
+        function login() {
+            const codeInput = document.getElementById('access-code');
+            const errorMsg = document.getElementById('error-msg');
+            
+            // Check if entered code matches any valid code
+           !function(){
+                if (VALID_ACCESS_CODES.includes(codeInput.value)) {
+                    // Set login status in localStorage
+                    localStorage.setItem('isLoggedIn', 'true');
+                    // Redirect to main page
+                    window.location.href = 'index.html';
+                } else {
+                    errorMsg.style.display = 'block';
+                    codeInput.value = '';
+                    setTimeout(() => {
+                        errorMsg.style.display = 'none';
+                    }, 3000);
+                }
+            }();
+        }
+
+        // Handle enter key
+        document.getElementById('access-code').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                login();
+            }
+        });
+
+        // Check if already logged in
+        if (localStorage.getItem('isLoggedIn') === 'true') {
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
