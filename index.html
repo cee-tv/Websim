@@ -1,172 +1,1406 @@
 <html>
+
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Türk TV</title>
-    <style>
-        body {
-            background: #1a1a1a;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            font-family: Arial, sans-serif;
-            color: white;
-        }
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CEETV</title>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.4.10"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.6/shaka-player.compiled.js"></script>
+  <style>
+    :root {
+      --tv-width: 800px;
+      --tv-height: 450px;
+      --remote-width: 150px;
+      --remote-height: 420px;
+    }
 
-        .login-container {
-            background: linear-gradient(45deg, #2a2a2a, #3a3a3a);
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-            width: 90%;
-            max-width: 400px;
-            text-align: center;
-        }
+    @media (max-width: 768px) {
+      :root {
+        --tv-width: 100vw;
+        --tv-height: 56.25vw;
+        --remote-width: 240px;
+        --remote-height: auto;
+      }
 
-        .logo {
-            margin-bottom: 30px;
-            font-size: 24px;
-            font-weight: bold;
-            color: #fff;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
+      body {
+        padding: 10px;
+        gap: 20px;
+      }
 
-        .input-group {
-            margin-bottom: 20px;
-        }
+      .tv-container {
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+      }
 
-        .code-input {
-            width: 200px;
-            padding: 12px;
-            border: 2px solid #444;
-            background: #222;
-            color: white;
-            border-radius: 5px;
-            font-size: 16px;
-            text-align: center;
-            letter-spacing: 3px;
-            transition: all 0.3s ease;
-        }
+      .tv-frame {
+        padding: 0;
+        border-radius: 0;
+      }
 
-        .code-input:focus {
-            outline: none;
-            border-color: #666;
-            box-shadow: 0 0 10px rgba(255,255,255,0.1);
-        }
+      .screen {
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
+      }
 
-        .login-btn {
-            background: linear-gradient(45deg, #3a3a3a, #444);
-            border: none;
-            padding: 12px 30px;
-            color: white;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
+      .channel-list {
+        width: 90%;
+        padding: 15px;
+        font-size: 0.85em;
+      }
+    }
 
-        .login-btn:hover {
-            background: linear-gradient(45deg, #444, #555);
-            transform: translateY(-2px);
-        }
+    body {
+      background: #1a1a1a;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      color: white;
+      gap: 50px;
+      flex-direction: column;
+      padding: 20px;
+    }
 
-        .login-btn:active {
-            transform: translateY(1px);
-        }
+    @media (min-width: 1024px) {
+      body {
+        flex-direction: row;
+        justify-content: center;
+        align-items: flex-start;
+        gap: 40px;
+        padding: 40px;
+      }
+    }
 
-        .error-message {
-            color: #ff6b6b;
-            margin-top: 15px;
-            display: none;
-        }
+    @media (max-width: 1023px) {
+      body {
+        flex-direction: column;
+        padding: 20px;
+      }
+    }
 
-        .loading {
-            display: none;
-            margin-top: 20px;
-        }
+    .tv-container {
+      position: relative;
+      width: 100%;
+      max-width: var(--tv-width);
+      height: auto;
+      aspect-ratio: 16/9;
+    }
 
-        .loading::after {
-            content: '';
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #ffffff33;
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s linear infinite;
-        }
+    @media (min-width: 1024px) {
+      .tv-container {
+        order: 1;
+        margin-right: 20px;
+      }
+    }
 
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-    </style>
+    @media (max-width: 1023px) {
+      .tv-container {
+        order: 1;
+      }
+    }
+
+    .tv-frame {
+      background: none;
+      border-radius: 0;
+      padding: 0;
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    .screen {
+      width: 100%;
+      height: 100%;
+      background: #000;
+      overflow: hidden;
+      position: relative;
+      transition: all 0.3s ease;
+      border-radius: 8px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .screen.off {
+      background: #111;
+    }
+
+    .screen.off::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 2px;
+      height: 2px;
+      background: white;
+      border-radius: 50%;
+      animation: tvOff 0.3s ease-out forwards;
+    }
+
+    /* Remote Control Styles */
+    .remote-container {
+      background: linear-gradient(45deg, #2a2a2a, #3a3a3a);
+      box-shadow:
+        inset 0 2px 10px rgba(255, 255, 255, 0.1),
+        inset 0 -2px 10px rgba(0, 0, 0, 0.3),
+        0 5px 20px rgba(0, 0, 0, 0.7);
+      border: 1px solid #444;
+      padding: 20px 15px;
+      width: min(var(--remote-width), 90%);
+      height: var(--remote-height);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.9);
+      border: 1px solid #555;
+      position: relative;
+      transition: transform 0.3s ease;
+      border-radius: 10px;
+    }
+
+    @media (min-width: 1024px) {
+      .remote-container {
+        order: 2;
+        margin-top: 5px;
+      }
+    }
+
+    @media (max-width: 1023px) {
+      .remote-container {
+        order: 2;
+        margin-top: 5px;
+      }
+    }
+
+    .remote-power {
+      width: 30px;
+      height: 30px;
+      background: radial-gradient(circle at 40% 40%, #cc0000, #aa0000);
+      border: 2px solid #aa0000;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-bottom: 15px;
+      position: relative;
+      box-shadow:
+        inset 0 2px 5px rgba(255, 255, 255, 0.1),
+        inset 0 -2px 5px rgba(0, 0, 0, 0.3),
+        0 2px 8px rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .remote-power::before {
+      content: '';
+      position: absolute;
+      width: 2px;
+      height: 10px;
+      background: rgba(255, 255, 255, 0.9);
+      top: 5px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-radius: 1px;
+    }
+
+    .remote-power::after {
+      content: '';
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border: 2px solid rgba(255, 255, 255, 0.9);
+      border-radius: 50%;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-top: 2px solid transparent;
+    }
+
+    .remote-power:hover {
+      background: radial-gradient(circle at 40% 40%, #ff0000, #cc0000);
+      transform: scale(1.1);
+      box-shadow:
+        inset 0 2px 3px rgba(255, 255, 255, 0.3),
+        inset 0 -2px 5px rgba(0, 0, 0, 0.3),
+        0 0 15px rgba(255, 0, 0, 0.5);
+    }
+
+    .remote-power:active {
+      transform: scale(0.95);
+      box-shadow:
+        inset 0 2px 3px rgba(255, 255, 255, 0.1),
+        inset 0 -2px 5px rgba(0, 0, 0, 0.4);
+    }
+
+    .remote-power.off {
+      background: radial-gradient(circle at 40% 40%, #666, #444);
+      border-color: #555;
+      box-shadow:
+        inset 0 2px 3px rgba(255, 255, 255, 0.1),
+        inset 0 -2px 5px rgba(0, 0, 0, 0.3);
+    }
+
+    .remote-power.off::before,
+    .remote-power.off::after {
+      opacity: 0.5;
+    }
+
+    .channel-pad {
+      background: linear-gradient(to bottom, #252525, #2a2a2a);
+      box-shadow:
+        inset 0 2px 5px rgba(0, 0, 0, 0.3),
+        0 1px 2px rgba(255, 255, 255, 0.05);
+      padding: 12px;
+      gap: 10px;
+      margin-bottom: 10px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      width: 95%;
+      border-radius: 8px;
+    }
+
+    .remote-button {
+      background: linear-gradient(145deg, #3a3a3a, #303030);
+      border: 1px solid #444;
+      box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.1),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.3),
+        0 2px 4px rgba(0, 0, 0, 0.3);
+      color: #ddd;
+      font-size: 1em;
+      padding: 8px;
+      min-width: 32px;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border-radius: 6px;
+    }
+
+    .remote-button:active {
+      background: linear-gradient(145deg, #303030, #3a3a3a);
+      box-shadow:
+        inset 0 2px 4px rgba(0, 0, 0, 0.3);
+      transform: translateY(1px);
+    }
+
+    .controls-container {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      width: 95%;
+      margin-top: 8px;
+    }
+
+    .volume-buttons,
+    .channel-nav {
+      background: linear-gradient(to bottom, #252525, #2a2a2a);
+      box-shadow:
+        inset 0 2px 5px rgba(0, 0, 0, 0.3),
+        0 1px 2px rgba(255, 255, 255, 0.05);
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      width: 45%;
+      align-items: center;
+      border-radius: 8px;
+    }
+
+    .volume-button,
+    .channel-nav-button {
+      background: linear-gradient(145deg, #3a3a3a, #303030);
+      border: 1px solid #444;
+      box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.1),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.3),
+        0 2px 4px rgba(0, 0, 0, 0.3);
+      color: #ddd;
+      font-weight: bold;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+      padding: 5px 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 0.75em;
+      width: 90%;
+      text-align: center;
+      border-radius: 6px;
+    }
+
+    .volume-button:active,
+    .channel-nav-button:active {
+      transform: translateY(2px);
+      background: linear-gradient(145deg, #303030, #3a3a3a);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    }
+
+    .volume-label,
+    .channel-label {
+      color: #888;
+      font-size: 0.7em;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin: 4px 0;
+      text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Volume indicator style */
+    .volume-indicator {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 10px;
+      border-radius: 5px;
+      z-index: 10;
+      display: none;
+      color: white;
+    }
+
+    /* Add to the existing CSS */
+    #video-player {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    #youtube-embed {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+    }
+
+    .channel-info {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 10px;
+      border-radius: 5px;
+      z-index: 10;
+      display: none;
+    }
+
+    .channel-input {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.8);
+      padding: 20px 40px;
+      border-radius: 10px;
+      font-size: 48px;
+      z-index: 10;
+      display: none;
+      color: white;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+      min-width: 100px;
+      text-align: center;
+    }
+
+    .error-message {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.7);
+      padding: 10px;
+      border-radius: 5px;
+      z-index: 10;
+      display: none;
+      text-align: center;
+    }
+
+    /* Add keyboard info style */
+    .keyboard-info {
+      display: none;
+    }
+
+    @media (min-width: 769px) {
+      .keyboard-info {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.7);
+        padding: 10px 20px;
+        border-radius: 5px;
+        font-size: 0.9em;
+        opacity: 0.7;
+      }
+    }
+
+    .channel-list {
+      position: relative;
+      background: none;
+      padding: 0;
+      border-radius: 0;
+      width: 100%;
+      max-width: none;
+      margin: 0;
+    }
+
+    .channel-list h3 {
+      margin: 15px;
+      padding-top: 5px;
+      color: white;
+      font-size: 1.2em;
+    }
+
+    .channel-list ul {
+      padding: 0 15px;
+      list-style-type: none;
+    }
+
+    .channel-list li {
+      padding: 10px 15px;
+      border-radius: 5px;
+      background: rgba(255, 255, 255, 0.1);
+      margin-bottom: 10px;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .channel-list li:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateX(5px);
+    }
+
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: -300px;
+      width: 300px;
+      height: 100vh;
+      background: rgba(0, 0, 0, 1);
+      transition: left 0.3s ease;
+      z-index: 9998;
+      overflow-y: auto;
+      padding: 20px;
+      visibility: hidden;
+      opacity: 0;
+    }
+
+    @media (min-width: 1024px) {
+      .sidebar {
+        top: 0;
+        left: -300px;
+      }
+    }
+
+    .sidebar.expanded {
+      left: 0;
+      visibility: visible;
+      opacity: 1;
+    }
+
+    @media (min-width: 1024px) {
+      .sidebar.expanded {
+        left: 0;
+      }
+    }
+
+    .sidebar-toggle {
+      position: fixed;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0, 0, 0, 0.7);
+      border: none;
+      color: white;
+      padding: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      z-index: 9997;
+      transition: all 0.3s ease;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    @media (min-width: 1024px) {
+      .sidebar-toggle {
+        left: 20px;
+      }
+    }
+
+    .sidebar-toggle:hover {
+      background: rgba(0, 0, 0, 0.9);
+      transform: translateY(-50%) scale(1.1);
+    }
+
+    .sidebar-toggle svg {
+      width: 24px;
+      height: 24px;
+      fill: currentColor;
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar.expanded+.sidebar-toggle {
+      left: 320px;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 250px;
+        left: -250px;
+      }
+
+      .sidebar-toggle {
+        left: 10px;
+      }
+
+      .sidebar.expanded+.sidebar-toggle {
+        left: 270px;
+      }
+    }
+
+    /* Add fullscreen button styles */
+    .fullscreen-button {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.7);
+      border: none;
+      color: white;
+      padding: 8px;
+      border-radius: 5px;
+      cursor: pointer;
+      z-index: 10;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .fullscreen-button:hover {
+      background: rgba(0, 0, 0, 0.9);
+      transform: scale(1.1);
+    }
+
+    .fullscreen-button svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    /* Fullscreen styles */
+    .tv-container.fullscreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw !important;
+      height: 100vh !important;
+      max-width: none;
+      z-index: 9999;
+    }
+
+    .tv-container.fullscreen .tv-frame,
+    .tv-container.fullscreen .screen {
+      border-radius: 0;
+    }
+
+    /* Add loading indicator styles */
+    .loading-indicator {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.8);
+      padding: 15px 30px;
+      border-radius: 10px;
+      text-align: center;
+      z-index: 999;
+      font-size: 24px;
+      color: white;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+      display: none;
+    }
+
+    .loading-indicator::after {
+      content: '%';
+      margin-left: 2px;
+    }
+
+    /* Action buttons style */
+    .action-buttons {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 15px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .action-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: white;
+      padding: 8px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 0.9em;
+      width: 100%;
+    }
+
+    .action-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+    }
+
+    .donate-btn {
+      background: rgba(66, 153, 225, 0.2);
+    }
+
+    .donate-btn:hover {
+      background: rgba(66, 153, 225, 0.3);
+    }
+  </style>
 </head>
+
 <body>
-    <div class="login-container">
-        <div class="logo">Türk TV</div>
-        <div class="input-group">
-            <input type="password" class="code-input" placeholder="Enter Code" maxlength="6">
+
+  <div class="sidebar">
+    <div class="action-buttons">
+      <button class="action-btn donate-btn" onclick="window.open('https://buymeacoffee.com/yourname', '_blank')">
+        <svg viewBox="0 0 24 24" width="18" height="18">
+          <path fill="currentColor"
+            d="M20,4H4A2,2 0 0,0 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V6A2,2 0 0,0 20,4M20,18H4V6H20V18M6,8H18V10H6V8M6,12H18V14H6V12M6,16H14V18H6V16Z" />
+        </svg>
+        Donate
+      </button>
+      <button class="action-btn logout-btn" onclick="logout()">
+        <svg viewBox="0 0 24 24" width="18" height="18">
+          <path fill="currentColor"
+            d="M16,17V14H9V10H16V7L21,12L16,17M14,2A2,2 0 0,1 16,4V6H14V4H5V20H14V18H16V20A2,2 0 0,1 14,22H5A2,2 0 0,1 3,20V4A2,2 0 0,1 5,2H14Z" />
+        </svg>
+        Logout
+      </button>
+    </div>
+    <div class="channel-list">
+      <h3>Channel List</h3>
+      <ul>
+        <li onclick="changeChannel('trt1')">1. TRT 1</li>
+        <li onclick="changeChannel('trthaber')">2. TRT News</li>
+        <li onclick="changeChannel('trtspor')">3. TRT Sports</li>
+        <li onclick="changeChannel('trtbelgesel')">4. TRT Documentary</li>
+        <li onclick="changeChannel('trtcocuk')">5. TRT Kids</li>
+        <li onclick="changeChannel('showtv')">6. Show TV</li>
+        <li onclick="changeChannel('startv')">7. Star TV</li>
+        <li onclick="changeChannel('tv8')">8. TV8</li>
+        <li onclick="changeChannel('beyaztv')">9. Beyaz TV</li>
+        <li onclick="changeChannel('ntv')">10. NTV</li>
+        <li onclick="changeChannel('trt2')">11. TRT 2</li>
+        <li onclick="changeChannel('haberturk')">12. Haberturk</li>
+        <li onclick="changeChannel('numberone')">13. Number One</li>
+        <li onclick="changeChannel('trtmuzik')">14. TRT Music</li>
+        <li onclick="changeChannel('youtube')">15. YouTube</li>
+        <li onclick="changeChannel('tapmovies')">16. TAP Movies</li>
+      </ul>
+    </div>
+  </div>
+
+  <button class="sidebar-toggle" title="Toggle Channel List">
+    <svg viewBox="0 0 24 24">
+      <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
+    </svg>
+  </button>
+
+  <div class="tv-container">
+    <div class="tv-frame">
+      <div class="screen" id="tv-screen">
+        <video id="video-player" controls playsinline></video>
+        <div class="channel-info" id="channel-info"></div>
+        <div class="channel-input" id="channel-input"></div>
+        <div class="error-message" id="error-message">
+          Channel could not be loaded. Please try another channel.
         </div>
-        <button class="login-btn">Login</button>
-        <div class="error-message">Invalid code. Please try again.</div>
-        <div class="loading"></div>
+        <div class="loading-indicator" id="loading-indicator"></div>
+        <div class="volume-indicator" id="volume-indicator"></div>
+        <iframe id="youtube-embed" src="" style="display:none;"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen></iframe>
+        <button class="fullscreen-button" id="fullscreen-btn" title="Fullscreen">
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>;
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="remote-container">
+    <button class="remote-power" onclick="togglePower()" title="Power"></button>
+
+    <div class="channel-pad">
+      <button class="remote-button" onclick="inputChannel(1)">1</button>
+      <button class="remote-button" onclick="inputChannel(2)">2</button>
+      <button class="remote-button" onclick="inputChannel(3)">3</button>
+      <button class="remote-button" onclick="inputChannel(4)">4</button>
+      <button class="remote-button" onclick="inputChannel(5)">5</button>
+      <button class="remote-button" onclick="inputChannel(6)">6</button>
+      <button class="remote-button" onclick="inputChannel(7)">7</button>
+      <button class="remote-button" onclick="inputChannel(8)">8</button>
+      <button class="remote-button" onclick="inputChannel(9)">9</button>
+      <button class="remote-button" onclick="inputChannel(0)">0</button>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Check if already logged in
-            if (localStorage.getItem('isLoggedIn')) {
-                window.location.href = 'stream.html';
-                return;
-            }
+    <div class="controls-container">
+      <div class="volume-buttons">
+        <button class="volume-button" onclick="adjustVolume(0.1)">▲</button>
+        <div class="volume-label">VOLUME</div>
+        <button class="volume-button" onclick="adjustVolume(-0.1)">▼</button>
+      </div>
 
-            const loginBtn = document.querySelector('.login-btn');
-            const codeInput = document.querySelector('.code-input');
-            const errorMsg = document.querySelector('.error-message');
-            const loading = document.querySelector('.loading');
+      <div class="channel-nav">
+        <button class="channel-nav-button" onclick="changeChannelRelative(1)">▲</button>
+        <div class="channel-label">CHANNEL</div>
+        <button class="channel-nav-button" onclick="changeChannelRelative(-1)">▼</button>
+      </div>
+    </div>
+  </div>
 
-            // Add enter key support
-            codeInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    loginBtn.click();
-                }
-            });
+  <script>
+    let currentHls = null;
+    let shakaPlayer = null;
+    let isPoweredOn = true;
+    let currentVolume = 1;
+    let channelInputTimeout = null;
+    let currentChannelInput = "";
+    let currentChannelIndex = 0;
+    let hasError = false;
+    let currentChannelId = 'trt1'; // Store the current channel ID
 
-            loginBtn.addEventListener('click', async () => {
-                const code = codeInput.value;
-                
-                if (!code) {
-                    errorMsg.textContent = 'Please enter a code';
-                    errorMsg.style.display = 'block';
-                    return;
-                }
+    document.addEventListener('DOMContentLoaded', () => {
+      const keyboardInfo = document.querySelector('.keyboard-info');
+      if (!keyboardInfo) {
+        keyboardInfo = document.createElement('div');
+        keyboardInfo.className = 'keyboard-info';
+        document.body.appendChild(keyboardInfo);
+      }
+      keyboardInfo.textContent = "Keyboard controls: 'P' key for power, 'F' key for fullscreen"
 
-                // Hide error and show loading
-                errorMsg.style.display = 'none';
-                loading.style.display = 'block';
-                loginBtn.disabled = true;
+      const fullscreenBtn = document.getElementById('fullscreen-btn');
+      if (fullscreenBtn) {
+        fullscreenBtn.addEventListener('click', toggleFullscreen);
+      }
 
-                // Simulate API call delay
-                await new Promise(resolve => setTimeout(resolve, 1000));
-
-                // Simple validation (in real app, this would be server-side)
-                if (code === '123456') {
-                    localStorage.setItem('isLoggedIn', 'true');
-                    window.location.href = 'stream.html';
-                } else {
-                    errorMsg.textContent = 'Invalid code. Please try again.';
-                    errorMsg.style.display = 'block';
-                    loading.style.display = 'none';
-                    loginBtn.disabled = false;
-                    codeInput.value = '';
-                }
-            });
+      const siteUrl = document.getElementById('site-url');
+      if (siteUrl) {
+        siteUrl.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(siteUrl.textContent);
+            const originalText = siteUrl.textContent;
+            siteUrl.textContent = 'Copied!';
+            setTimeout(() => {
+              siteUrl.textContent = originalText;
+            }, 1000);
+          } catch (err) {
+            console.error('Failed to copy:', err);
+          }
         });
-    </script>
+      }
+
+      // Load last channel from localStorage or default to trt1
+      currentChannelId = localStorage.getItem('lastChannel') || 'trt1';
+      setTimeout(() => changeChannel(currentChannelId), 100);
+    });
+
+    const channels = {
+      trt1: {
+        name: "TRT 1",
+        url: "https://tv-trt1.medya.trt.com.tr/master.m3u8",
+        number: 1
+      },
+      trtmuzik: {
+        name: "TRT Music",
+        url: "https://tv-trtmuzik.medya.trt.com.tr/master.m3u8",
+        number: 14
+      },
+      trthaber: {
+        name: "TRT News",
+        url: "https://tv-trthaber.medya.trt.com.tr/master.m3u8",
+        number: 2
+      },
+      trtspor: {
+        name: "TRT Sports",
+        url: "https://tv-trtspor1.medya.trt.com.tr/master.m3u8",
+        number: 3
+      },
+      trtbelgesel: {
+        name: "TRT Documentary",
+        url: "https://tv-trtbelgesel.medya.trt.com.tr/master.m3u8",
+        number: 4
+      },
+      trtcocuk: {
+        name: "TRT Kids",
+        url: "https://tv-trtcocuk.medya.trt.com.tr/master.m3u8",
+        number: 5
+      },
+      showtv: {
+        name: "Show TV",
+        url: "https://ciner-live.daioncdn.net/showtv/showtv.m3u8",
+        number: 6
+      },
+      startv: {
+        name: "Star TV",
+        url: "https://dogus-live.daioncdn.net/startv/startv.m3u8",
+        number: 7
+      },
+      tv8: {
+        name: "TV8",
+        url: "https://tv8-live.daioncdn.net/tv8/tv8.m3u8",
+        number: 8
+      },
+      beyaztv: {
+        name: "Beyaz TV",
+        url: "https://beyaztv-live.daioncdn.net/beyaztv/beyaztv.m3u8",
+        number: 9
+      },
+      ntv: {
+        name: "NTV",
+        url: "https://dogus-live.daioncdn.net/ntv/ntv.m3u8",
+        number: 10
+      },
+      trt2: {
+        name: "TRT 2",
+        url: "https://tv-trt2.medya.trt.com.tr/master.m3u8",
+        number: 11
+      },
+      haberturk: {
+        name: "Haberturk",
+        url: "https://ciner-live.daioncdn.net/haberturktv/haberturktv.m3u8",
+        number: 12
+      },
+      numberone: {
+        name: "Number One",
+        url: "https://b01c02nl.mediatriple.net/videoonlylive/mtkgeuihrlfwlive/broadcast_5c9e17cd59e8b.smil/playlist.m3u8",
+        number: 13
+      },
+      youtube: {
+        name: "YouTube",
+        number: 15
+      },
+      tapmovies: {
+        name: "TAP Movies",
+        url: "https://qp-pldt-live-grp-06-prod.akamaized.net/out/u/cg_tapmovies_hd1.mpd",
+        number: 16,
+        drm: {
+          type: 'clearkey',
+          key: {
+            keyId: '71cbdf02b595468bb77398222e1ade09',
+            key: 'c3f2aa420b8908ab8761571c01899460'
+          }
+        }
+      }
+    };
+
+    function showVolumeIndicator(volume) {
+      const indicator = document.getElementById('volume-indicator');
+      indicator.textContent = `Volume: ${Math.round(volume * 100)}%`;
+      indicator.style.display = 'block';
+
+      setTimeout(() => {
+        indicator.style.display = 'none';
+      }, 2000);
+    }
+
+    function adjustVolume(change) {
+      if (!isPoweredOn) return;
+
+      const video = document.getElementById('video-player');
+      currentVolume = Math.max(0, Math.min(1, currentVolume + change));
+      video.volume = currentVolume;
+      showVolumeIndicator(currentVolume);
+    }
+
+    function inputChannel(number) {
+      if (!isPoweredOn) return;
+
+      currentChannelInput += number;
+
+      const channelInput = document.getElementById('channel-input');
+      channelInput.textContent = currentChannelInput;
+      channelInput.style.display = 'block';
+
+      if (channelInputTimeout) {
+        clearTimeout(channelInputTimeout);
+      }
+
+      channelInputTimeout = setTimeout(() => {
+        channelInput.style.display = 'none';
+
+        const channelEntry = Object.entries(channels).find(([_, channel]) =>
+          channel.number === parseInt(currentChannelInput)
+        );
+
+        if (channelEntry) {
+          changeChannel(channelEntry[0]);
+        }
+
+        currentChannelInput = "";
+      }, 1000);
+    }
+
+    function togglePower() {
+      const screen = document.getElementById('tv-screen');
+      const video = document.getElementById('video-player');
+      const powerBtn = document.querySelector('.remote-power');
+      const ytEmbed = document.getElementById('youtube-embed');
+
+      isPoweredOn = !isPoweredOn;
+
+      if (!isPoweredOn) {
+        screen.classList.add('off');
+        powerBtn.classList.add('off');
+
+        // Stop YouTube embed if playing
+        if (ytEmbed.style.display !== 'none') {
+          ytEmbed.contentWindow.postMessage('{"event":"command","func":"stopVideo","args":""}', '*');
+          ytEmbed.style.display = 'none';
+        }
+
+        // Handle HLS video
+        if (currentHls) {
+          try {
+            video.pause();
+            video.currentTime = 0;
+            video.removeAttribute('src');
+            video.load();
+            currentHls.stopLoad();
+            currentHls.detachMedia();
+            currentHls.destroy();
+            currentHls = null;
+          } catch (e) {
+            console.warn('Error destroying HLS instance:', e);
+          }
+        }
+
+        // Handle Shaka player
+        if (shakaPlayer) {
+          try {
+            video.pause();
+            video.currentTime = 0;
+            shakaPlayer.unload();
+            shakaPlayer.destroy();
+            shakaPlayer = null;
+          } catch (e) {
+            console.warn('Error destroying Shaka player:', e);
+          }
+        }
+
+        // Ensure video is hidden and muted
+        video.style.display = 'none';
+        video.muted = true;
+        video.volume = 0;
+
+      } else {
+        screen.classList.remove('off');
+        powerBtn.classList.remove('off');
+        video.style.display = 'block';
+        video.muted = false;
+        video.volume = currentVolume;
+        // Resume last channel
+        setTimeout(() => changeChannel(currentChannelId), 100);
+      }
+    }
+
+    async function initShakaPlayer(video, channel) {
+      try {
+        const player = new shaka.Player(video);
+
+        player.addEventListener('error', (error) => {
+          console.error('Shaka player error:', error);
+          handlePlaybackError();
+        });
+
+        if (channel.drm) {
+          player.configure({
+            drm: {
+              clearKeys: {
+                [channel.drm.key.keyId]: channel.drm.key.key
+              }
+            }
+          });
+        }
+
+        await player.load(channel.url);
+        video.play();
+        return player;
+      } catch (error) {
+        console.error('Shaka player init error:', error);
+        handlePlaybackError();
+        return null;
+      }
+    }
+
+    async function changeChannel(channelId) {
+      if (!isPoweredOn) return;
+
+      // Store the current channel ID
+      currentChannelId = channelId;
+      localStorage.setItem('lastChannel', channelId);
+
+      currentChannelIndex = Object.keys(channels).indexOf(channelId);
+
+      const video = document.getElementById('video-player');
+      const channelInfo = document.getElementById('channel-info');
+      const errorMessage = document.getElementById('error-message');
+      const loadingIndicator = document.getElementById('loading-indicator');
+      const channel = channels[channelId];
+      const ytEmbed = document.getElementById('youtube-embed');
+
+      // Show loading indicator
+      loadingIndicator.style.display = 'block';
+      let progress = 0;
+      const progressInterval = setInterval(() => {
+        progress = Math.min(progress + 2, 95); // Cap at 95% until actual loading completes
+        loadingIndicator.textContent = progress;
+      }, 50);
+
+      // Clean up existing video element first
+      try {
+        if (video) {
+          video.pause();
+          video.removeAttribute('src');
+          video.load();
+        }
+      } catch (e) {
+        console.warn('Error resetting video:', e);
+      }
+
+      // Clean up existing players
+      if (currentHls) {
+        try {
+          currentHls.stopLoad();
+          currentHls.detachMedia();
+          currentHls.destroy();
+          currentHls = null;
+        } catch (e) {
+          console.warn('Error destroying HLS:', e);
+        }
+      }
+
+      if (shakaPlayer) {
+        try {
+          await shakaPlayer.unload();
+          await shakaPlayer.destroy();
+          shakaPlayer = null;
+        } catch (e) {
+          console.warn('Error destroying Shaka:', e);
+        }
+      }
+
+      errorMessage.style.display = 'none';
+      channelInfo.textContent = `${channel.number}. ${channel.name}`;
+      channelInfo.style.display = 'block';
+      document.title = `${channel.name} - Türk TV`;
+
+      const completeLoading = () => {
+        clearInterval(progressInterval);
+        loadingIndicator.textContent = '100';
+        setTimeout(() => {
+          loadingIndicator.style.display = 'none';
+        }, 500);
+      };
+
+      if (channelId === 'youtube') {
+        video.style.display = 'none';
+        const videoId = prompt('Enter YouTube video ID:\n\nExample: For https://youtube.com/watch?v=dQw4w9WgXcQ\nEnter: dQw4w9WgXcQ\n\nVideo ID is the part after v= in YouTube URLs');
+        if (videoId) {
+          ytEmbed.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=1&enablejsapi=1`;
+          ytEmbed.style.display = 'block';
+          channelInfo.style.display = 'none';
+          completeLoading();
+        } else {
+          errorMessage.textContent = 'Please enter a valid YouTube video ID';
+          errorMessage.style.display = 'block';
+          setTimeout(() => {
+            errorMessage.style.display = 'none';
+          }, 3000);
+          completeLoading();
+        }
+        return;
+      }
+
+      ytEmbed.style.display = 'none';
+      ytEmbed.src = '';
+      video.style.display = 'block';
+
+      try {
+        // Create new video element
+        const newVideo = document.createElement('video');
+        newVideo.id = 'video-player';
+        newVideo.style.width = '100%';
+        newVideo.style.height = '100%';
+        newVideo.style.objectFit = 'cover';
+        newVideo.style.display = 'block';
+        newVideo.volume = currentVolume;
+
+        // Replace old video element
+        video.parentNode.replaceChild(newVideo, video);
+
+        if (channel.drm) {
+          try {
+            shakaPlayer = await initShakaPlayer(newVideo, channel);
+            if (!shakaPlayer) throw new Error('Failed to initialize Shaka player');
+          } catch (error) {
+            console.error('Shaka player error:', error);
+            throw error;
+          }
+        } else if (Hls.isSupported()) {
+          const hls = new Hls({
+            xhrSetup: function(xhr) {
+              xhr.responseType = 'arraybuffer';
+            },
+            debug: false,
+            enableWorker: true,
+            lowLatencyMode: true,
+            backBufferLength: 90
+          });
+
+          let playPromise = null;
+
+          hls.on(Hls.Events.ERROR, function(event, data) {
+            if (data.fatal) {
+              console.error('HLS error:', data);
+              handlePlaybackError();
+            }
+          });
+
+          await new Promise((resolve, reject) => {
+            hls.loadSource(channel.url);
+            hls.attachMedia(newVideo);
+
+            hls.on(Hls.Events.MEDIA_ATTACHED, async () => {
+              try {
+                // Wrap play in try-catch and ignore AbortError
+                try {
+                  await newVideo.play();
+                } catch (error) {
+                  if (error.name !== 'AbortError') {
+                    throw error;
+                  }
+                }
+                resolve();
+              } catch (error) {
+                reject(error);
+              }
+            });
+
+            hls.on(Hls.Events.ERROR, (event, data) => {
+              if (data.fatal) reject(data);
+            });
+          });
+
+          currentHls = hls;
+        } else if (newVideo.canPlayType('application/vnd.apple.mpegurl')) {
+          newVideo.src = channel.url;
+          try {
+            await newVideo.play();
+          } catch (error) {
+            if (error.name !== 'AbortError') throw error;
+          }
+        }
+
+        completeLoading();
+      } catch (error) {
+        console.error('Channel change error:', error);
+        if (error.name !== 'AbortError') {
+          handlePlaybackError();
+        }
+        completeLoading();
+      }
+
+      setTimeout(() => {
+        channelInfo.style.display = 'none';
+      }, 3000);
+    }
+
+    function changeChannelRelative(direction) {
+      if (!isPoweredOn) return;
+
+      const currentChannel = Object.values(channels).find((channel, index) => index === currentChannelIndex);
+      let nextChannelNumber = currentChannel.number + direction;
+
+      if (nextChannelNumber < 1) nextChannelNumber = 16;
+      if (nextChannelNumber > 16) nextChannelNumber = 1;
+
+      const nextChannel = Object.entries(channels).find(([_, channel]) =>
+        channel.number === nextChannelNumber
+      );
+
+      if (nextChannel) {
+        changeChannel(nextChannel[0]);
+      }
+    }
+
+    function handlePlaybackError() {
+      const errorMessage = document.getElementById('error-message');
+      errorMessage.textContent = 'Channel could not be loaded. Please try another channel.';
+      errorMessage.style.display = 'block';
+      setTimeout(() => {
+        errorMessage.style.display = 'none';
+      }, 5000);
+    }
+
+    function toggleFullscreen() {
+      const container = document.querySelector('.tv-container');
+
+      if (!document.fullscreenElement) {
+        container.classList.add('fullscreen');
+        if (container.requestFullscreen) {
+          container.requestFullscreen();
+        } else if (container.webkitRequestFullscreen) {
+          container.webkitRequestFullscreen();
+        } else if (container.msRequestFullscreen) {
+          container.msRequestFullscreen();
+        }
+
+        // Lock to landscape orientation if supported
+        if (screen.orientation && screen.orientation.lock) {
+          screen.orientation.lock('landscape').catch((err) => {
+            console.warn('Orientation lock failed:', err);
+          });
+        }
+
+        document.getElementById('fullscreen-btn').querySelector('svg').innerHTML =
+          '<path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>';
+      } else {
+        container.classList.remove('fullscreen');
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) {
+          document.msExitFullscreen();
+        }
+
+        // Unlock orientation if supported
+        if (screen.orientation && screen.orientation.unlock) {
+          screen.orientation.unlock();
+        }
+
+        document.getElementById('fullscreen-btn').querySelector('svg').innerHTML =
+          '<path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>';
+      }
+    }
+
+    function toggleSidebar() {
+      const sidebar = document.querySelector('.sidebar');
+      const isExpanding = !sidebar.classList.contains('expanded');
+
+      sidebar.classList.toggle('expanded');
+
+      // If expanding, make visible first then animate
+      if (isExpanding) {
+        sidebar.style.visibility = 'visible';
+      }
+
+      // If collapsing, wait for animation then hide
+      if (!isExpanding) {
+        setTimeout(() => {
+          if (!sidebar.classList.contains('expanded')) {
+            sidebar.style.visibility = 'hidden';
+          }
+        }, 300); // Match transition duration
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Add sidebar toggle listener
+      document.querySelector('.sidebar-toggle').addEventListener('click', toggleSidebar);
+
+      document.addEventListener('click', (e) => {
+        const sidebar = document.querySelector('.sidebar');
+        const sidebarToggle = document.querySelector('.sidebar-toggle');
+
+        if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target) && sidebar.classList.contains('expanded')) {
+          toggleSidebar();
+        }
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (!isPoweredOn && e.key !== 'p') return;
+
+        switch (e.key) {
+          case 'p':
+            togglePower();
+            break;
+          case 'f':
+            toggleFullscreen();
+            break;
+          case 'Escape':
+            if (document.fullscreenElement) {
+              toggleFullscreen();
+            }
+            break;
+        }
+      });
+
+      document.addEventListener('fullscreenchange', () => {
+        const container = document.querySelector('.tv-container');
+        if (!document.fullscreenElement) {
+          container.classList.remove('fullscreen');
+          const fullscreenBtn = document.getElementById('fullscreen-btn');
+          if (fullscreenBtn) {
+            fullscreenBtn.querySelector('svg').innerHTML =
+              '<path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>';
+          }
+        }
+      });
+    });
+
+    window.addEventListener('beforeunload', () => {
+      if (currentHls) {
+        try {
+          currentHls.stopLoad();
+          currentHls.detachMedia();
+          currentHls.destroy();
+          currentHls = null;
+        } catch (e) {
+          console.warn('Unload cleanup warning:', e);
+        }
+      }
+      if (shakaPlayer) {
+        try {
+          shakaPlayer.destroy();
+          shakaPlayer = null;
+        } catch (e) {
+          console.warn('Shaka cleanup warning:', e);
+        }
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (localStorage.getItem('isLoggedIn') !== 'true') {
+        window.location.href = 'login.html';
+      }
+    });
+
+    function logout() {
+      localStorage.removeItem('isLoggedIn');
+      window.location.href = 'login.html';
+    }
+  </script>
+
+  <div class="keyboard-info">
+    Keyboard controls: 'P' key for power, 'F' key for fullscreen
+  </div>
 </body>
+
 </html>
