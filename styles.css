@@ -1,9 +1,9 @@
 .logout-btn {
-    background: rgba(255, 0, 0, 0.8);
+    background: rgba(245, 39, 39, 0.95);
 }
 
 .logout-btn:hover {
-    background: rgba(255, 0, 0, 0.9);
+    background: rgba(245, 39, 39, 1);
 }
 
 .action-buttons {
@@ -35,9 +35,9 @@
 }
 
 .logout-btn {
-    background: rgba(255, 0, 0, 0.8);
+    background: rgba(245, 39, 39, 0.95);
 }
 
 .logout-btn:hover {
-    background: rgba(255, 0, 0, 0.9);
+    background: rgba(245, 39, 39, 1;
 }
